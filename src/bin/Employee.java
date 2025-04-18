@@ -12,13 +12,11 @@ public class Employee {
 	private String idNumber;
 	private String address;
 	
-	private int yearJoined;
-	private int monthJoined;
-	private int dayJoined;
+	private LocalDate joinDate;
 	private int monthWorkingInYear;
-	
+
 	private boolean isForeigner;
-	private boolean gender;
+	private boolean gender; //true = Laki-laki, false = Perempuan
 	
 	private int monthlySalary;
 	private int otherMonthlyIncome;
@@ -27,25 +25,22 @@ public class Employee {
 	private String spouseName;
 	private String spouseIdNumber;
 
-	private List<String> childNames;
-	private List<String> childIdNumbers;
-	
-	public Employee(String employeeId, String firstName, String lastName, String idNumber, String address, int yearJoined, int monthJoined, int dayJoined, boolean isForeigner, boolean gender) {
+	private List<Child> children;
+
+	public Employee(String employeeId, String firstName, String lastName, String idNumber, String address,
+			int yearJoined, int monthJoined, int dayJoined, boolean isForeigner, boolean gender) {
 		this.employeeId = employeeId;
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.idNumber = idNumber;
 		this.address = address;
-		this.yearJoined = yearJoined;
-		this.monthJoined = monthJoined;
-		this.dayJoined = dayJoined;
+		this.joinDate = LocalDate.of(yearJoined, monthJoined, dayJoined);
 		this.isForeigner = isForeigner;
 		this.gender = gender;
-		
-		childNames = new LinkedList<String>();
-		childIdNumbers = new LinkedList<String>();
+
+		children = new LinkedList<>();
 	}
-	
+
 	public void setMonthlySalary(int grade) {
 		if (grade == 1) {
 			monthlySalary = 3000000;
@@ -54,39 +49,44 @@ public class Employee {
 		} else if (grade == 3) {
 			monthlySalary = 7000000;
 		}
+
 		if (isForeigner) {
 			monthlySalary *= 1.5;
 		}
 	}
-	
-	public void setAnnualDeductible(int deductible) {	
+
+	public void setAnnualDeductible(int deductible) {
 		this.annualDeductible = deductible;
 	}
-	
-	public void setAdditionalIncome(int income) {	
+
+	public void setAdditionalIncome(int income) {
 		this.otherMonthlyIncome = income;
 	}
-	
+
 	public void setSpouse(String spouseName, String spouseIdNumber) {
 		this.spouseName = spouseName;
-		this.spouseIdNumber = idNumber;
+		this.spouseIdNumber = spouseIdNumber;
 	}
-	
+
 	public void addChild(String childName, String childIdNumber) {
-		childNames.add(childName);
-		childIdNumbers.add(childIdNumber);
+		children.add(new Child(childName, childIdNumber));
 	}
-	
+
 	public int getAnnualIncomeTax() {
-		
-		LocalDate date = LocalDate.now();
-		
-		if (date.getYear() == yearJoined) {
-			monthWorkingInYear = date.getMonthValue() - monthJoined;
-		}else {
+		LocalDate now = LocalDate.now();
+		if (now.getYear() == joinDate.getYear()) {
+			monthWorkingInYear = now.getMonthValue() - joinDate.getMonthValue();
+		} else {
 			monthWorkingInYear = 12;
 		}
-		
-		return TaxFunction.calculateTax(monthlySalary, otherMonthlyIncome, monthWorkingInYear, annualDeductible, spouseIdNumber.equals(""), childIdNumbers.size());
+
+		return TaxFunction.calculateTax(
+			monthlySalary,
+			otherMonthlyIncome,
+			monthWorkingInYear,
+			annualDeductible,
+			spouseIdNumber == null || spouseIdNumber.isEmpty(),
+			children.size()
+		);
 	}
 }
